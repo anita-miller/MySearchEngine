@@ -1,7 +1,6 @@
 package main
 
 import io.circe.Json
-import io.circe.Json.JArray
 
 class Index private (val rawIndex: Map[String, List[Json]]) {
   def search(value: String): List[Json] = rawIndex.getOrElse(value, List.empty)

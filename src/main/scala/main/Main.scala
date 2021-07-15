@@ -1,51 +1,21 @@
 package main
 
-import io.circe.Json
+import scala.io.StdIn.readLine
 
-class Main {
+object Main {
+  def main(args: Array[String]): Unit = {
+    val listFieldsdOrg = List("_id", "url", "external_id", "name", "domain_names", "created_at", "details","shared_tickets","tags")
 
-  trait BareBonesBinarySearchTree {
-    def insert(key:Int)
-    def search(key:Int):Boolean
+    val searchCategory = readLine("Select 1 Users, 2 org and 3 tickets")
+    val searchField = readLine("Enter search term")
+    val searchValue = readLine("Enter search value")
+
+    val orgIndexes: Map[String, Index] = IndexBuilder.createIndexes(listFieldsdOrg)
+    orgIndexes.get(searchField) match {
+      case Some(index) => println(index.search(searchValue))
+      case None => println("field didn't exist")
+    }
   }
-
-  def foo() = {
-    val json =
-      """[
-        |  {
-        |    "_id": "436bf9b0-1147-4c0a-8439-6f79833bff5b",
-        |    "url": "http://initech.zendesk.com/api/v2/tickets/436bf9b0-1147-4c0a-8439-6f79833bff5b.json",
-        |    "external_id": "9210cdc9-4bee-485f-a078-35396cd74063",
-        |    "created_at": "2016-04-28T11:19:34 -10:00",
-        |    "type": "incident",
-        |    "subject": "A Catastrophe in Korea (North)",
-        |    "description": "Nostrud ad sit velit cupidatat laboris ipsum nisi amet laboris ex exercitation amet et proident. Ipsum fugiat aute dolore tempor nostrud velit ipsum.",
-        |    "priority": "high",
-        |    "status": "pending",
-        |    "submitter_id": 38,
-        |    "assignee_id": 24,
-        |    "organization_id": 116,
-        |    "tags": [
-        |      "Ohio",
-        |      "Pennsylvania",
-        |      "American Samoa",
-        |      "Northern Mariana Islands"
-        |    ],
-        |    "codes": [
-        |     1,2,3
-        |    ],
-        |    "has_incidents": false,
-        |    "due_at": "2016-07-31T02:37:50 -10:00",
-        |    "via": "web"
-        |  }
-        |]
-        |""".stripMargin
-    //
-    //    val items = io.circe.parser.parse(json).right.get
-    //    val userByIdIndex = createIndex(List(items), field = "_id")
-    //    println(userByIdIndex.search(userByIdIndex, "436bf9b0-1147-4c0a-8439-6f79833bff5b"))
-  }
-
 }
 
 // Option 1 - Search works on specific case classes
