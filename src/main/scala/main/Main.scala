@@ -1,20 +1,22 @@
 package main
 
-import scala.io.StdIn.readLine
+import cats.effect.{ExitCode, IO, IOApp}
+import com.typesafe.scalalogging.Logger
+import main.config.Config
 
-object Main {
-  def main(args: Array[String]): Unit = {
-    val listFieldsdOrg = List("_id", "url", "external_id", "name", "domain_names", "created_at", "details","shared_tickets","tags")
+object Main extends IOApp  {
+  private lazy val logger = Logger[Main.type]
 
-    val searchCategory = readLine("Select 1 Users, 2 org and 3 tickets")
-    val searchField = readLine("Enter search term")
-    val searchValue = readLine("Enter search value")
-
-    val orgIndexes: Map[String, Index] = IndexBuilder.createIndexes(listFieldsdOrg)
-    orgIndexes.get(searchField) match {
-      case Some(index) => println(index.search(searchValue))
-      case None => println("field didn't exist")
+  override def run(args: List[String]): IO[ExitCode] =
+    Config.fromEnvironment() match {
+      case Right(config) => start(config)
+      case Left(error) => IO(logger.error("Failed to run")).map(_ => ExitCode.Error)
     }
+
+  private def start(config: Config): IO[ExitCode] = {
+    Application(config).run()
+      .map { _ => logger.info("starting with config") }
+      .map(_ => ExitCode.Success)
   }
 }
 

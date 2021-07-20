@@ -50,6 +50,14 @@ class IndexSpec extends AnyFunSpec {
     index.search("hello") shouldBe List(matchingDocument1, matchingDocument2)
   }
 
+  it("handles missing fields"){
+    val matchingDocument = Json.obj("_id" := "123")
+    val notMatchingDocument =  Json.obj("_id" := "456", "url" := "http://foo.com")
+
+    val index = Index.createIndex(List(matchingDocument, notMatchingDocument),  "url")
+    index.search("") shouldBe List(matchingDocument)
+
+  }
   //  it("does something with unexpected json") {
   //    Index.createIndex(List(Json.fromBoolean(false)),  "_id")
   //  }

@@ -7,8 +7,8 @@ import java.io.InputStream
 import scala.io.Source
 
 object IndexBuilder {
-  def createIndexes(fields: List[String]): Map[String, Index] = {
-    val fileStream: InputStream = getClass.getResourceAsStream("/organizations.json")
+  def createIndexes(fields: List[String], fileName: String): Map[String, Index] = {
+    val fileStream: InputStream = getClass.getResourceAsStream(fileName)
     val rawJson: String = Source.fromInputStream(fileStream).getLines.mkString.stripMargin
     val Items: Option[Vector[Json]] = io.circe.parser.parse(rawJson).right.get.asArray
     Items match {
