@@ -1,9 +1,9 @@
 package main.config
 
-import error.Errors
+import error.AppError
 
 object Config {
-  def fromEnvironment():Either[Errors, Config] ={
+  def fromEnvironment(): Either[AppError, Config] = {
     for {
       appName <- EnvVar.searchEnvVar("APP_NAME")
       userFilename <- EnvVar.searchEnvVar("USER_FILENAME")
@@ -16,7 +16,6 @@ object Config {
       orgFilename = orgFilename
     )
   }
-
 }
 
 final case class Config(appName: String, userFilename: String, ticketFilename: String, orgFilename: String)

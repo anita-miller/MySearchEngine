@@ -1,8 +1,14 @@
 package error
 
-sealed trait Errors extends Exception
+sealed trait AppError {
+  def getMessage: String
+}
 
-object Errors {
-  final case class someError(value: String) extends Errors
-
+object AppError {
+  case class invalidFieldError(field: String) extends AppError {
+    override def getMessage: String = s"Requested field $field not found "
+  }
+  case class configError(configEntry: String) extends AppError {
+    override def getMessage: String = s"Invalid app config: $configEntry"
+  }
 }
