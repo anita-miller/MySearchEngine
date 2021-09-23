@@ -61,20 +61,21 @@ class Application(
   private val searchValue = consoleIO.write("Enter search value").flatMap(_ => consoleIO.read())
 
   def run(): IO[Unit] = {
-    val indexes: IO[Option[DocumentIndex]] = searchCategory.map {
-      case "1" => Some(userIndexes)
-      case "2" => Some(orgIndexes)
-      case "3" => Some(ticketIndexes)
+    val indexes: IO[Option[(DocumentIndex, DocumentType)]] = searchCategory.map {
+      case "1" => Some(userIndexes, User)
+      case "2" => Some(orgIndexes, Org)
+      case "3" => Some(ticketIndexes, Ticket)
       case _ => None
     }
     indexes.flatMap {
       case None => consoleIO.write("Invalid search category")
-      case Some(index) =>
+      case Some((index, documentType)) =>
         searchField.flatMap { searchField =>
           index.index.get(searchField) match {
             case Some(index) =>
               searchValue.flatMap { searchValue =>
-                consoleIO.write(index.search(searchValue).toString)
+                val resultOfSearch = index.search(searchValue)
+                consoleIO.write(ResultEnricher.apply(resultOfSearch, documentType, orgIndexes, userIndexes, ticketIndexes).toString)
               }
             case None => consoleIO.write(AppError.invalidFieldError(searchField).getMessage)
           }

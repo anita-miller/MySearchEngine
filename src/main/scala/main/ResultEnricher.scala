@@ -3,26 +3,39 @@ package main
 import io.circe.{Json, JsonObject}
 
 object ResultEnricher {
-  val fieldToEnrich = List("organisation_id", "submitter_id", "assignee_id")
-  def apply(result: List[Json], orgIndex: DocumentIndex, userIndex: DocumentIndex, ticketIndex: DocumentIndex) : List[Json] = {
-    // go through result => base on which field => choose the index
-    result.map {jsonObject =>
-      val listOfValues: Seq[String] = indexDocument(jsonObject, "submitter_id") match {
+  case class JointIndex(documentIndex: DocumentIndex, sourceFieldId: String, targetFieldId: String, targetJoinName: String, label: String)
+
+  def apply(result: List[Json], typeOfDocument: DocumentType, orgIndex: DocumentIndex, userIndex: DocumentIndex, ticketIndex: DocumentIndex) : List[Json] = {
+    val joins = typeOfDocument match {
+      case Ticket =>  List(
+          JointIndex(orgIndex, "organization_id", "_id", "name", "organization"),
+          JointIndex(userIndex, "submitter_id", "_id", "name", "submitter"),
+          JointIndex(userIndex, "assignee_id", "_id", "name", "assignee")
+        )
+      case User => List(JointIndex(orgIndex, "organization_id", "_id", "name", "organization"))
+      case Org => List.empty
+    }
+    result.map(enrichDocument(joins))
+  }
+
+  private def enrichDocument(joins: List[JointIndex])(result: Json): Json = {
+    joins.foldLeft(result){ (jsonObject, jointIndex) =>
+      val listOfValues: List[String] = indexDocument(jsonObject, jointIndex.sourceFieldId) match { // source field
         case Some(jsonObj) => jsonToListofString(jsonObj)
         case None => List("")
       }
       val correspondingUserJson = listOfValues.flatMap { id =>
-        userIndex.index.get("_id") match {
+        jointIndex.documentIndex.index.get("_id") match {
           case Some(index) => index.search(id)
           case None => List.empty
         }
       }
-      val maybeUserName: Option[String] = correspondingUserJson.headOption.flatMap { jsonObjectAgain =>
-        jsonObjectAgain.hcursor.get[String]("name").toOption
+      val maybeName: Option[String] = correspondingUserJson.headOption.flatMap { jsonObjectAgain =>
+        jsonObjectAgain.hcursor.get[String](jointIndex.targetJoinName).toOption // descriptive field to fetch on target index
       }
-      val maybejson = maybeUserName match {
-        case Some(userName) => jsonObject.asObject.map(json => json.add("submitter", Json.fromString(userName)))
-        case None =>jsonObject.asObject.map(json => json.add("submitter", Json.fromString("Could not find")))
+      val maybejson = maybeName match {
+        case Some(userName) => jsonObject.asObject.map(json => json.add(jointIndex.label, Json.fromString(userName))) // label for joined relationship
+        case None => jsonObject.asObject.map(json => json.add(jointIndex.label, Json.fromString("Could not find")))
       }
       maybejson match {
         case Some(json) => Json.fromJsonObject(json)
