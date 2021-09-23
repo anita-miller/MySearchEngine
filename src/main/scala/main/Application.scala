@@ -56,15 +56,23 @@ class Application(
   private val ticketIndexes = IndexBuilder.createIndexes(fieldsOfTicket, ticketFilename)
 
   private val consoleIO: Console[IO] = new Console.ConsoleIo()
-  private val searchCategory = consoleIO.write("Select 1 Users, 2 org and 3 tickets").flatMap(_ => consoleIO.read())
+  private val searchCategory = consoleIO.write("Select 1 Users, 2 org and 3 tickets or 4 Exit").flatMap(_ => consoleIO.read())
   private val searchField = consoleIO.write("Enter search term").flatMap(_ => consoleIO.read())
   private val searchValue = consoleIO.write("Enter search value").flatMap(_ => consoleIO.read())
 
   def run(): IO[Unit] = {
+    // run many times or exit
+    runSearch
+  }
+
+  // IO(true) - means continue
+  // IO(false) - exit
+  private def runSearch: IO[Boolean] = {
     val indexes: IO[Option[(DocumentIndex, DocumentType)]] = searchCategory.map {
       case "1" => Some(userIndexes, User)
       case "2" => Some(orgIndexes, Org)
       case "3" => Some(ticketIndexes, Ticket)
+      case "4" =>
       case _ => None
     }
     indexes.flatMap {

@@ -3,11 +3,24 @@ package main
 import io.circe.{Json, JsonObject}
 
 object ResultEnricher {
-  case class JointIndex(documentIndex: DocumentIndex, sourceFieldId: String, targetFieldId: String, targetJoinName: String, label: String)
+  case class JointIndex(
+    documentIndex: DocumentIndex,
+    sourceFieldId: String,
+    targetFieldId: String,
+    targetJoinName: String,
+    label: String
+  )
 
-  def apply(result: List[Json], typeOfDocument: DocumentType, orgIndex: DocumentIndex, userIndex: DocumentIndex, ticketIndex: DocumentIndex) : List[Json] = {
+  def apply(
+    result: List[Json],
+    typeOfDocument: DocumentType,
+    orgIndex: DocumentIndex,
+    userIndex: DocumentIndex,
+    ticketIndex: DocumentIndex
+  ): List[Json] = {
     val joins = typeOfDocument match {
-      case Ticket =>  List(
+      case Ticket =>
+        List(
           JointIndex(orgIndex, "organization_id", "_id", "name", "organization"),
           JointIndex(userIndex, "submitter_id", "_id", "name", "submitter"),
           JointIndex(userIndex, "assignee_id", "_id", "name", "assignee")
@@ -19,7 +32,7 @@ object ResultEnricher {
   }
 
   private def enrichDocument(joins: List[JointIndex])(result: Json): Json = {
-    joins.foldLeft(result){ (jsonObject, jointIndex) =>
+    joins.foldLeft(result) { (jsonObject, jointIndex) =>
       val listOfValues: List[String] = indexDocument(jsonObject, jointIndex.sourceFieldId) match { // source field
         case Some(jsonObj) => jsonToListofString(jsonObj)
         case None => List("")
@@ -31,15 +44,20 @@ object ResultEnricher {
         }
       }
       val maybeName: Option[String] = correspondingUserJson.headOption.flatMap { jsonObjectAgain =>
-        jsonObjectAgain.hcursor.get[String](jointIndex.targetJoinName).toOption // descriptive field to fetch on target index
+        jsonObjectAgain.hcursor
+          .get[String](jointIndex.targetJoinName)
+          .toOption // descriptive field to fetch on target index
       }
       val maybejson = maybeName match {
-        case Some(userName) => jsonObject.asObject.map(json => json.add(jointIndex.label, Json.fromString(userName))) // label for joined relationship
+        case Some(userName) =>
+          jsonObject.asObject.map(json =>
+            json.add(jointIndex.label, Json.fromString(userName))
+          ) // label for joined relationship
         case None => jsonObject.asObject.map(json => json.add(jointIndex.label, Json.fromString("Could not find")))
       }
       maybejson match {
         case Some(json) => Json.fromJsonObject(json)
-        case None =>Json.fromJsonObject(JsonObject.empty)
+        case None => Json.fromJsonObject(JsonObject.empty)
       }
     }
   }
