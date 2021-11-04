@@ -1,0 +1,15 @@
+Things we could improve:
+- Config isn't using external environment
+- Remove SelectMenu.scala
+- class ConsoleIo() -> should be an object
+- Lot of use of String, could use models to restrict
+- IndexBuilder.createIndex could return an IO (or otherwise take the file contents)
+- Remove deprecated functions in IndexBuilder.createIndex
+- Handle invalid json
+- Don't silently ignore invalid json types
+- Duplication of `jsonToListofString`
+- ResultEnricher.enrichDocument - extract some smaller methods
+---- design
+- Extract Zendesk specific domain mappings from ResultEnricher, make it configurable
+- Improve the test coverage
+  - eg no CLI testing

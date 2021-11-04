@@ -9,7 +9,7 @@ trait Console[F[_]] {
 }
 
 object Console {
-  class ConsoleIo() extends Console[IO] {
+  object ConsoleIo extends Console[IO] {
     def write(message: String): IO[Unit] = IO(println(message))
 
     def read(): IO[String] = IO(readLine)

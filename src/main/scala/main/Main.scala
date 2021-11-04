@@ -14,12 +14,9 @@ object Main extends IOApp {
     }
 
   private def start(config: Config): IO[ExitCode] = {
-    Application(config)
-      .run()
-      .map { _ => logger.info("starting with config") }
-      .map(_ => ExitCode.Success)
+    for {
+      _ <- IO(logger.info(s"starting with config $config"))
+      _ <- Application(config).run()
+    } yield ExitCode.Success
   }
 }
-
-// Option 1 - Enrich data before indexing
-// option 2 -
